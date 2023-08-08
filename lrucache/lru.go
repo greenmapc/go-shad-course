@@ -24,12 +24,10 @@ func New(cap int) LruCache {
 
 func (c *LruCache) Get(key int) (int, bool) {
 	value, exist := c.Cache[key]
-
 	if exist {
 		c.touch(key)
 		return value, true
 	}
-
 	return value, false
 }
 
@@ -37,21 +35,25 @@ func (c *LruCache) touch(key int) {
 	c.LinkedList.MoveToFront(c.KeyElementCache[key])
 }
 
+func (c *LruCache) touchByElement(e *list.Element) {
+	c.LinkedList.MoveToFront(e)
+}
+
 func (c *LruCache) Set(key, value int) {
 	if c.Capacity == 0 {
 		return
 	}
 
-	if _, ok := c.Cache[key]; ok  {
-		c.touch(key)
+	if element, ok := c.KeyElementCache[key]; ok {
+		c.touchByElement(element)
 		c.Cache[key] = value
 		return
 	}
 
 	if len(c.Cache) >= c.Capacity {
-		key := c.LinkedList.Back().Value.(int)
-		delete(c.KeyElementCache, key)
-		delete(c.Cache, key)
+		oldestKey := c.LinkedList.Back().Value.(int)
+		delete(c.KeyElementCache, oldestKey)
+		delete(c.Cache, oldestKey)
 		c.LinkedList.Remove(c.LinkedList.Back())
 	}
 
@@ -59,7 +61,7 @@ func (c *LruCache) Set(key, value int) {
 	c.Cache[key] = value
 }
 
-func (c LruCache) Range(f func(key, value int) bool) {
+func (c *LruCache) Range(f func(key, value int) bool) {
 	for i := c.LinkedList.Back(); i != nil; i = i.Prev() {
 		key := i.Value.(int)
 		if !f(key, c.Cache[key]) {
