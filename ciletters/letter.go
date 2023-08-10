@@ -36,7 +36,11 @@ func MakeLetter(n *Notification) (string, error) {
 
 	var outputBuilder strings.Builder
 
-	tmpl.Execute(&outputBuilder, &n)
+	err = tmpl.Execute(&outputBuilder, &n)
+
+	if err != nil {
+		return "", err
+	}
 
 	return outputBuilder.String(), nil
 }
